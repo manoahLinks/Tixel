@@ -1,11 +1,28 @@
 "use client";
 
-import { useConnect, useAccount } from "wagmi";
+import { useConnect, useAccount, useWalletClient } from "wagmi";
+import { useDepositUSDCx } from "@/hooks/useDepositUSDCx";
+import { USDCX_BRIDGE_CONFIG } from "@/lib/config";
 
 export default function Home() {
 
   const { connect, connectors } = useConnect();
   const { address, isConnected } = useAccount();
+
+  const { depositUSDCx, isLoading, step } = useDepositUSDCx(USDCX_BRIDGE_CONFIG);
+
+  const handleDeposit = async () => {
+
+    try {
+      await depositUSDCx(
+        "0.1",                                      // Amount in USDC
+        "ST1VYVQJNH6XSH9GGCPBK5E5QCVB0JFFWG8ESPPSK" // Stacks address
+      );
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
 
   if (isConnected) return (
     <div className="flex flex-col min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black gap-y-2">
@@ -14,8 +31,10 @@ export default function Home() {
 
       <button
         className="p-2 bg-orange-400 font-semibold text-gray-700 cursor-pointer"
+        onClick={handleDeposit} 
+        disabled={isLoading}
       >
-        Bridge USDC to Stacks L2
+        {isLoading ? step.message : 'Bridge USDC to Stacks '}
       </button>
     </div>  
   );

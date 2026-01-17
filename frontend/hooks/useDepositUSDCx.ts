@@ -1,9 +1,11 @@
 import { useState, useCallback } from 'react';
 import { useAccount, usePublicClient, useWalletClient } from 'wagmi';
-import { parseUnits, type Hex, pad, toHex } from 'viem';
+import { parseUnits, type Hex, pad, toHex, encodeFunctionData } from 'viem';
 import * as P from 'micro-packed';
 import { createAddress, addressToString, AddressVersion, StacksWireType } from '@stacks/transactions';
 import { hex } from '@scure/base';
+
+import { walletClient, getWalletClient } from "@/lib/chain";
 
 export type USDCxDepositStatus = 
   | 'idle'
@@ -101,7 +103,7 @@ const ERC20_ABI = [
 export const useDepositUSDCx = (config: USDCxDepositConfig) => {
   const { address, isConnected } = useAccount();
   const publicClient = usePublicClient();
-  const { data: walletClient } = useWalletClient();
+  // const { data: walletClient } = useWalletClient();
   
   const [step, setStep] = useState<USDCxDepositStep>({
     status: 'idle',
@@ -211,11 +213,14 @@ export const useDepositUSDCx = (config: USDCxDepositConfig) => {
             progress: 40,
           });
 
-          const approveTxHash = await walletClient.writeContract({
-            address: config.ethUsdcContract,
-            abi: ERC20_ABI,
-            functionName: 'approve',
-            args: [config.xReserveContract, value],
+          const approveTxHash = await walletClient?.sendTransaction({
+            account: address,
+            to: config.ethUsdcContract,
+            data: encodeFunctionData({
+              abi: ERC20_ABI,
+              functionName: 'approve',
+              args: [config.xReserveContract, value],
+            }),
           });
 
           console.log('Approval tx hash:', approveTxHash);
@@ -239,18 +244,21 @@ export const useDepositUSDCx = (config: USDCxDepositConfig) => {
           progress: 70,
         });
 
-        const depositTxHash = await walletClient.writeContract({
-          address: config.xReserveContract,
-          abi: X_RESERVE_ABI,
-          functionName: 'depositToRemote',
-          args: [
-            value,
-            config.stacksDomain,
-            remoteRecipient,
-            config.ethUsdcContract,
-            maxFeeAmount,
-            hookData,
-          ],
+        const depositTxHash = await walletClient.sendTransaction({
+          account: address,
+          to: config.xReserveContract,
+          data: encodeFunctionData({
+            abi: X_RESERVE_ABI,
+            functionName: 'depositToRemote',
+            args: [
+              value,
+              config.stacksDomain,
+              remoteRecipient,
+              config.ethUsdcContract,
+              maxFeeAmount,
+              hookData,
+            ],
+          }),
         });
 
         setTxHash(depositTxHash);
