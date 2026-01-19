@@ -534,16 +534,6 @@ STACKS_API_URL=https://api.hiro.so
 ETH_RPC_URL=https://mainnet.infura.io/v3/YOUR_KEY
 ```
 
-### Production Checklist
-
-- [ ] Test on testnet thoroughly
-- [ ] Audit smart contracts
-- [ ] Set up monitoring (transaction failures, bridge delays)
-- [ ] Configure error alerts
-- [ ] Implement rate limiting
-- [ ] Add transaction retry logic
-- [ ] Set up backup RPC endpoints
-
 ---
 
 ## 🤝 Contributing
@@ -577,77 +567,6 @@ npm run build
 # Link locally for testing
 npm link
 ```
-
----
-
-## 🏆 Built for Programming USDCx on Stacks Challenge
-
-**Event:** Programming USDCx on Stacks Builder Challenge  
-**Dates:** January 19-25, 2026  
-**Organizer:** Stacks Labs  
-**Challenge Goal:** Build applications that bring USDCx liquidity from Ethereum to Stacks
-
-### Why This Project Wins
-
-✅ **Ecosystem Impact** - Enables any developer to integrate USDCx payments  
-✅ **Technical Excellence** - Production-ready SDK with full TypeScript support  
-✅ **Practical Demo** - Live ticketing platform proving it works  
-✅ **Documentation** - Comprehensive docs, examples, and tutorials  
-✅ **Open Source** - Available on NPM for immediate use  
-✅ **Scalability** - One SDK unlocks infinite use cases  
-
-### What We Built
-
-1. **USDCx Payments SDK** - Developer tool for payments, escrow, and bridging
-2. **Event Ticketing Platform** - Reference implementation using the SDK
-3. **Complete Documentation** - API docs, tutorials, examples
-4. **Smart Contracts** - Deployed escrow and payment contracts on Stacks
-5. **Integration Tests** - 95%+ test coverage
-
----
-
-## 📊 Project Stats
-
-- **Lines of Code:** ~2,500 (SDK) + ~800 (Ticketing Platform)
-- **Test Coverage:** 95%+
-- **Bundle Size:** < 50kb (minified + gzipped)
-- **Dependencies:** Minimal (only Stacks.js essentials)
-- **TypeScript:** 100%
-- **Documentation:** Complete API reference + 10+ examples
-
----
-
-## 🗺️ Roadmap
-
-### Version 0.1.0 (Hackathon MVP) ✅
-- [x] Basic payment acceptance
-- [x] Escrow creation and management
-- [x] Ethereum ↔ Stacks bridging
-- [x] Ticketing platform demo
-- [x] NPM package published
-
-### Version 0.2.0 (Post-Hackathon)
-- [ ] Subscription payment support
-- [ ] Recurring payments
-- [ ] Multi-token support (beyond USDCx)
-- [ ] Enhanced error handling
-- [ ] Webhook notifications
-
-### Version 1.0.0 (Production)
-- [ ] Full security audit
-- [ ] Gas optimization
-- [ ] Mainnet deployment
-- [ ] Advanced escrow conditions (oracle-based)
-- [ ] DAO governance for disputes
-- [ ] Mobile SDK (React Native)
-
----
-
-## 📄 License
-
-MIT © [Your Name]
-
-See [LICENSE](./LICENSE) for details.
 
 ---
 
