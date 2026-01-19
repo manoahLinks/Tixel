@@ -1,0 +1,65 @@
+{
+  "name": "@tixel/usdcx-sdk",
+  "version": "0.1.0",
+  "description": "USDCx payments SDK for Stacks - Accept payments, create escrows, and bridge assets",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "dev": "tsc --watch",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "lint": "eslint src/**/*.ts",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "prepublishOnly": "npm run build",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "stacks",
+    "usdcx",
+    "payments",
+    "crypto",
+    "blockchain",
+    "sdk",
+    "web3",
+    "circle",
+    "xreserve",
+    "escrow"
+  ],
+  "author": "Mano <manoahluka@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourname/usdcx-sdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourname/usdcx-sdk/issues"
+  },
+  "homepage": "https://github.com/yourname/usdcx-sdk#readme",
+  "dependencies": {
+    "@stacks/common": "^6.13.0",
+    "@stacks/connect": "^7.8.2",
+    "@stacks/network": "^6.13.0",
+    "@stacks/transactions": "^6.13.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.5",
+    "@typescript-eslint/eslint-plugin": "^6.19.0",
+    "@typescript-eslint/parser": "^6.19.0",
+    "eslint": "^8.56.0",
+    "prettier": "^3.2.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

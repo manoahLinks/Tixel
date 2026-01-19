@@ -1,0 +1,27 @@
+# Source files (don't publish source, only built files)
+src/
+test/
+examples/
+docs/
+
+# Config files
+tsconfig.json
+.eslintrc.js
+.prettierrc
+vitest.config.ts
+
+# Development files
+*.test.ts
+*.spec.ts
+.github/
+.vscode/
+
+# Logs and temp
+*.log
+.DS_Store
+coverage/
+.cache/
+
+# Git
+.git/
+.gitignore
