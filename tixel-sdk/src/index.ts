@@ -1,11 +1,11 @@
-// src/index.ts
-/**
- * USDCx Payments SDK for Stacks
- * Accept payments, create escrows, and bridge assets
- */
 
-export { USDCxPayments } from './core/USDCxPayments';
+export { USDCxBridge } from './core/USDCxBridge';
+export { Bridge } from './core/Bridge';
+
+// Export types
 export * from './types';
 
-// Version
+// Export utilities
+export * from './utils';
+
 export const VERSION = '0.1.0';

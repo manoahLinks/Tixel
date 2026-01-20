@@ -19,7 +19,8 @@
     "lint": "eslint src/**/*.ts",
     "format": "prettier --write \"src/**/*.ts\"",
     "prepublishOnly": "npm run build",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "postinstall": "node scripts/postinstall.js"
   },
   "keywords": [
     "stacks",
@@ -44,10 +45,11 @@
   },
   "homepage": "https://github.com/yourname/usdcx-sdk#readme",
   "dependencies": {
-    "@stacks/common": "^6.13.0",
-    "@stacks/connect": "^7.8.2",
+    "@scure/base": "^1.2.6",
     "@stacks/network": "^6.13.0",
-    "@stacks/transactions": "^6.13.0"
+    "@stacks/transactions": "^7.3.1",
+    "micro-packed": "^0.6.3",
+    "viem": "^2.44.4"
   },
   "devDependencies": {
     "@types/node": "^20.11.5",
