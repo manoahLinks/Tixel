@@ -1,5 +1,5 @@
 {
-  "name": "@tixel/usdcx-sdk",
+  "name": "@tixel-sdk/usdcx",
   "version": "0.1.0",
   "description": "USDCx payments SDK for Stacks - Accept payments, create escrows, and bridge assets",
   "main": "dist/index.js",
@@ -38,12 +38,13 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourname/usdcx-sdk.git"
+    "url": "https://github.com/manoahLinks/Tixel.git",
+    "directory": "tixel-sdk"
   },
   "bugs": {
-    "url": "https://github.com/yourname/usdcx-sdk/issues"
+    "url": "https://github.com/manoahLinks/Tixel/issues"
   },
-  "homepage": "https://github.com/yourname/usdcx-sdk#readme",
+  "homepage": "https://github.com/manoahLinks/Tixel/tree/main/tixel-sdk#readme",
   "dependencies": {
     "@scure/base": "^1.2.6",
     "@stacks/network": "^6.13.0",
