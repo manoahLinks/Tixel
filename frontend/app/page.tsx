@@ -3,6 +3,7 @@
 import { useConnect, useAccount, useWalletClient } from "wagmi";
 import { useDepositUSDCx } from "@/hooks/useDepositUSDCx";
 import { USDCX_BRIDGE_CONFIG } from "@/lib/config";
+import BridgeForm from "@/components/BridgeForm";
 
 export default function Home() {
 
@@ -36,6 +37,8 @@ export default function Home() {
       >
         {isLoading ? step.message : 'Bridge USDC to Stacks '}
       </button>
+
+      <BridgeForm/>
     </div>  
   );
 
