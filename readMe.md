@@ -40,6 +40,8 @@ Tixel solves the problem of fragmented liquidity across blockchains by allowing 
 
 ## NPM Package: @tixel-sdk/usdcx
 
+[@tixel-sdk on NPM](https://www.npmjs.com/package/@tixel-sdk/usdcx)
+
 To simplify cross-chain development, I built an NPM package that makes it easy for developers to integrate Ethereum-Stacks bridging into their applications.
 
 ### Features
@@ -108,7 +110,7 @@ Handles NFT ticket minting and transfers for event access verification.
 ### Installation
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/tixel.git
+git clone https://github.com/manoahLinks/Tixel
 
 # Install dependencies
 cd tixel
