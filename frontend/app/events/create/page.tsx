@@ -7,7 +7,8 @@ import SiteHeader from "@/components/SiteHeader";
 import type { TixelEvent } from "@/lib/events";
 import { STACKS_EVENT_TICKETING_CONTRACT } from "@/lib/config";
 import { request } from "@stacks/connect";
-import { stringAsciiCV, stringUtf8CV, uintCV } from "@stacks/transactions";
+import { stringAsciiCV, stringUtf8CV, uintCV, serializeCV } from "@stacks/transactions";
+import { STACKS_TESTNET } from "@stacks/network";
 
 const BANNERS = [
   { label: "Default", value: "/events/banner-default.svg" },
@@ -63,20 +64,27 @@ export default function CreateEventPage() {
       const priceUsdcx = toCents(price) * 10000;
       const finalTokenUri = tokenUri.trim() || `ipfs://event-${Date.now()}`;
   
+      // Shim to make modern CVs compatible with the request API
+      const toLegacy = (cv: any) => {
+        cv.serialize = () => serializeCV(cv);
+        return cv;
+      };
+
       const functionArgs = [
-        stringUtf8CV(title.trim().substring(0, 64)),
-        stringUtf8CV(venue.trim().substring(0, 64)),
-        stringUtf8CV(city.trim().substring(0, 64)),
-        uintCV(dateTimestamp),
-        uintCV(Number(maxTickets)),
-        uintCV(priceUsdcx),
-        stringAsciiCV(finalTokenUri.substring(0, 256))
+        toLegacy(stringUtf8CV(title.trim().substring(0, 64))),
+        toLegacy(stringUtf8CV(venue.trim().substring(0, 64))),
+        toLegacy(stringUtf8CV(city.trim().substring(0, 64))),
+        toLegacy(uintCV(dateTimestamp)),
+        toLegacy(uintCV(Number(maxTickets))),
+        toLegacy(uintCV(priceUsdcx)),
+        toLegacy(stringAsciiCV(finalTokenUri.substring(0, 256))),
       ];
   
       const result = (await request("stx_callContract", {
         contract: STACKS_EVENT_TICKETING_CONTRACT as `${string}.${string}`,
         functionName: "create-event",
         functionArgs,
+        network: "testnet",
       })) as unknown as { txid?: string };
   
       console.log("Event created successfully!", result);

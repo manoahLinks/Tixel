@@ -5,7 +5,8 @@ import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { request, isConnected as stacksIsConnected } from "@stacks/connect";
-import { contractPrincipalCV, uintCV } from "@stacks/transactions";
+import { contractPrincipalCV, serializeCV, uintCV } from "@stacks/transactions";
+import { STACKS_TESTNET } from "@stacks/network";
 import Container from "@/components/Container";
 import SiteHeader from "@/components/SiteHeader";
 import BridgeForm from "@/components/BridgeForm";
@@ -66,16 +67,23 @@ export default function EventDetailsPage() {
 
     setIsPurchasing(true);
     try {
+      // Shim to make modern CVs compatible with the request API
+      const toLegacy = (cv: any) => {
+        cv.serialize = () => serializeCV(cv);
+        return cv;
+      };
+
       const functionArgs = [
-        uintCV(event.stacksEventId),
-        uintCV(safeQty),
-        contractPrincipalCV(usdcxAddr, usdcxName),
+        toLegacy(uintCV(event.stacksEventId)),
+        toLegacy(uintCV(safeQty)),
+        toLegacy(contractPrincipalCV(usdcxAddr, usdcxName)),
       ];
 
       const result = (await request("stx_callContract", {
         contract: STACKS_EVENT_TICKETING_CONTRACT as `${string}.${string}`,
         functionName: "purchase-ticket",
         functionArgs,
+        network: "testnet",
       })) as unknown as { txid?: string };
 
       setNotice(result?.txid ? `Transaction submitted: ${result.txid}` : "Transaction submitted.");
@@ -244,4 +252,3 @@ export default function EventDetailsPage() {
     </div>
   );
 }
-
