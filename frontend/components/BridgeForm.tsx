@@ -1,10 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
 import { useBridge } from '@/hooks/useBridge';
+import { getLocalStorage, isConnected as stacksIsConnected } from '@stacks/connect';
 
-export default function BridgeForm() {
+export default function BridgeForm({
+  className = "max-w-md",
+}: {
+  className?: string;
+}) {
   const { address, isConnected } = useAccount();
   const {
     executeBridge,
@@ -20,6 +25,14 @@ export default function BridgeForm() {
 
   const [amount, setAmount] = useState('');
   const [stacksAddress, setStacksAddress] = useState('');
+
+  useEffect(() => {
+    if (stacksAddress) return;
+    if (!stacksIsConnected()) return;
+    const userData = getLocalStorage();
+    const stx = userData?.addresses?.stx?.[0]?.address ?? '';
+    if (stx) setStacksAddress(stx);
+  }, [stacksAddress]);
 
   const handleBridge = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,18 +55,18 @@ export default function BridgeForm() {
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-lg">
-      <h2 className="text-2xl font-bold mb-6">Bridge USDCx to Stacks</h2>
+    <div className={`${className} w-full rounded-lg border border-zinc-800 bg-zinc-950 p-6`}>
+      <h2 className="mb-6 text-xl font-semibold text-zinc-100">Bridge USDCx to Stacks</h2>
 
       {!isConnected ? (
         <div className="text-center py-8">
-          <p className="text-gray-600 mb-4">Please connect your wallet to continue</p>
+          <p className="mb-4 text-sm text-zinc-400">Please connect your wallet to continue</p>
         </div>
       ) : (
         <form onSubmit={handleBridge} className="space-y-4">
           {/* Amount Input */}
           <div>
-            <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="amount" className="mb-2 block text-xs text-zinc-400">
               Amount (USDC)
             </label>
             <input
@@ -65,14 +78,14 @@ export default function BridgeForm() {
               onChange={(e) => setAmount(e.target.value)}
               placeholder="0.00"
               disabled={isLoading}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="w-full rounded-md border border-zinc-800 bg-black px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-orange-400 focus:outline-none disabled:opacity-50"
               required
             />
           </div>
 
           {/* Stacks Address Input */}
           <div>
-            <label htmlFor="stacksAddress" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="stacksAddress" className="mb-2 block text-xs text-zinc-400">
               Stacks Address
             </label>
             <input
@@ -82,39 +95,44 @@ export default function BridgeForm() {
               onChange={(e) => setStacksAddress(e.target.value)}
               placeholder="SP..."
               disabled={isLoading}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed font-mono text-sm"
+              className="w-full rounded-md border border-zinc-800 bg-black px-3 py-2 font-mono text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-orange-400 focus:outline-none disabled:opacity-50"
               required
             />
+            {!stacksAddress && stacksIsConnected() ? (
+              <p className="mt-2 text-xs text-zinc-500">
+                Tip: connect your Stacks wallet above to auto-fill this.
+              </p>
+            ) : null}
           </div>
 
           {/* Progress Display */}
           {isLoading && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="rounded-lg border border-zinc-800 bg-black p-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-blue-900">
+                <span className="text-sm font-medium text-zinc-100">
                   {bridgeStatus || 'Processing...'}
                 </span>
-                <span className="text-sm text-blue-700">{progress.percentage}%</span>
+                <span className="text-sm text-zinc-400">{progress.percentage}%</span>
               </div>
-              <div className="w-full bg-blue-200 rounded-full h-2">
+              <div className="h-2 w-full rounded-full bg-zinc-800">
                 <div
-                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  className="h-2 rounded-full bg-orange-400 transition-all duration-300"
                   style={{ width: `${progress.percentage}%` }}
                 />
               </div>
-              <p className="text-xs text-blue-700 mt-2">{progress.message}</p>
+              <p className="mt-2 text-xs text-zinc-400">{progress.message}</p>
             </div>
           )}
 
           {/* Success Message */}
           {isSuccess && txHash && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <p className="text-sm font-medium text-green-900 mb-2">✅ Bridge Successful!</p>
+            <div className="rounded-lg border border-zinc-800 bg-black p-4">
+              <p className="mb-2 text-sm font-medium text-zinc-100">Bridge Successful</p>
               <a
                 href={`https://sepolia.etherscan.io/tx/${txHash}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-green-700 hover:text-green-900 underline break-all"
+                className="break-all text-xs text-orange-400 hover:text-orange-300 underline"
               >
                 View on Etherscan →
               </a>
@@ -123,9 +141,9 @@ export default function BridgeForm() {
 
           {/* Error Message */}
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <p className="text-sm font-medium text-red-900 mb-1">❌ Error</p>
-              <p className="text-xs text-red-700">{error.message}</p>
+            <div className="rounded-lg border border-red-900/40 bg-black p-4">
+              <p className="mb-1 text-sm font-medium text-zinc-100">Error</p>
+              <p className="text-xs text-red-300">{error.message}</p>
             </div>
           )}
 
@@ -135,7 +153,7 @@ export default function BridgeForm() {
               <button
                 type="submit"
                 disabled={isLoading || !amount || !stacksAddress}
-                className="flex-1 bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                className="flex-1 rounded-md bg-orange-400 px-4 py-3 text-sm font-semibold text-black hover:bg-orange-300 disabled:opacity-50 transition-colors"
               >
                 {isLoading ? 'Bridging...' : 'Bridge to Stacks'}
               </button>
@@ -143,7 +161,7 @@ export default function BridgeForm() {
               <button
                 type="button"
                 onClick={reset}
-                className="flex-1 bg-gray-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                className="flex-1 rounded-md border border-zinc-700 px-4 py-3 text-sm font-semibold text-zinc-100 hover:border-orange-400 hover:text-orange-400 transition-colors"
               >
                 Bridge Again
               </button>
@@ -151,9 +169,9 @@ export default function BridgeForm() {
           </div>
 
           {/* Info */}
-          <div className="bg-gray-50 rounded-lg p-3 text-xs text-gray-600">
-            <p className="font-medium mb-1">ℹ️ Bridge Info:</p>
-            <ul className="space-y-1 ml-4 list-disc">
+          <div className="rounded-lg border border-zinc-800 bg-black p-3 text-xs text-zinc-400">
+            <p className="mb-1 font-medium text-zinc-100">Bridge Info</p>
+            <ul className="ml-4 list-disc space-y-1">
               <li>Estimated time: ~3 minutes</li>
               <li>Network: Sepolia Testnet → Stacks Testnet</li>
               <li>You'll need ETH for gas fees</li>
