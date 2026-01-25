@@ -89,6 +89,11 @@
   (map-get? events { event-id: event-id })
 )
 
+;; Get the counter for the next event ID (total events created + 1)
+(define-read-only (get-next-event-id)
+  (ok (var-get next-event-id))
+)
+
 ;; -----------------------------------------------------------
 ;; Ticketing Functions
 ;; -----------------------------------------------------------
@@ -102,16 +107,16 @@
   (quantity uint)
 )
   (begin
-    (if (>= quantity u1) (begin (try! (contract-call? .ticketss-nft mint-for-event recipient event-id (+ start-serial u0) token-uri)) true) true)
-    (if (>= quantity u2) (begin (try! (contract-call? .ticketss-nft mint-for-event recipient event-id (+ start-serial u1) token-uri)) true) true)
-    (if (>= quantity u3) (begin (try! (contract-call? .ticketss-nft mint-for-event recipient event-id (+ start-serial u2) token-uri)) true) true)
-    (if (>= quantity u4) (begin (try! (contract-call? .ticketss-nft mint-for-event recipient event-id (+ start-serial u3) token-uri)) true) true)
-    (if (>= quantity u5) (begin (try! (contract-call? .ticketss-nft mint-for-event recipient event-id (+ start-serial u4) token-uri)) true) true)
-    (if (>= quantity u6) (begin (try! (contract-call? .ticketss-nft mint-for-event recipient event-id (+ start-serial u5) token-uri)) true) true)
-    (if (>= quantity u7) (begin (try! (contract-call? .ticketss-nft mint-for-event recipient event-id (+ start-serial u6) token-uri)) true) true)
-    (if (>= quantity u8) (begin (try! (contract-call? .ticketss-nft mint-for-event recipient event-id (+ start-serial u7) token-uri)) true) true)
-    (if (>= quantity u9) (begin (try! (contract-call? .ticketss-nft mint-for-event recipient event-id (+ start-serial u8) token-uri)) true) true)
-    (if (>= quantity u10) (begin (try! (contract-call? .ticketss-nft mint-for-event recipient event-id (+ start-serial u9) token-uri)) true) true)
+    (if (>= quantity u1) (begin (try! (contract-call? .event-nft mint-for-event recipient event-id (+ start-serial u0) token-uri)) true) true)
+    (if (>= quantity u2) (begin (try! (contract-call? .event-nft mint-for-event recipient event-id (+ start-serial u1) token-uri)) true) true)
+    (if (>= quantity u3) (begin (try! (contract-call? .event-nft mint-for-event recipient event-id (+ start-serial u2) token-uri)) true) true)
+    (if (>= quantity u4) (begin (try! (contract-call? .event-nft mint-for-event recipient event-id (+ start-serial u3) token-uri)) true) true)
+    (if (>= quantity u5) (begin (try! (contract-call? .event-nft mint-for-event recipient event-id (+ start-serial u4) token-uri)) true) true)
+    (if (>= quantity u6) (begin (try! (contract-call? .event-nft mint-for-event recipient event-id (+ start-serial u5) token-uri)) true) true)
+    (if (>= quantity u7) (begin (try! (contract-call? .event-nft mint-for-event recipient event-id (+ start-serial u6) token-uri)) true) true)
+    (if (>= quantity u8) (begin (try! (contract-call? .event-nft mint-for-event recipient event-id (+ start-serial u7) token-uri)) true) true)
+    (if (>= quantity u9) (begin (try! (contract-call? .event-nft mint-for-event recipient event-id (+ start-serial u8) token-uri)) true) true)
+    (if (>= quantity u10) (begin (try! (contract-call? .event-nft mint-for-event recipient event-id (+ start-serial u9) token-uri)) true) true)
     (ok true)
   )
 )

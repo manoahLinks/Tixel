@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import Container from "@/components/Container";
 import SiteHeader from "@/components/SiteHeader";
 import type { TixelEvent } from "@/lib/events";
-import { addLocalEvent } from "@/lib/eventStore";
+import { STACKS_EVENT_TICKETING_CONTRACT } from "@/lib/config";
+import { request } from "@stacks/connect";
+import { stringAsciiCV, stringUtf8CV, uintCV } from "@stacks/transactions";
 
 const BANNERS = [
   { label: "Default", value: "/events/banner-default.svg" },
@@ -24,6 +26,7 @@ function toCents(price: string) {
 
 export default function CreateEventPage() {
   const router = useRouter();
+  const [notice, setNotice] = useState("");
 
   const [title, setTitle] = useState("");
   const [dateISO, setDateISO] = useState("");
@@ -32,45 +35,61 @@ export default function CreateEventPage() {
   const [city, setCity] = useState("");
   const [price, setPrice] = useState("25");
   const [tags, setTags] = useState("music, live");
-  const [bannerImage, setBannerImage] = useState<(typeof BANNERS)[number]["value"]>(
-    "/events/banner-default.svg"
-  );
+  const [bannerImage, setBannerImage] = useState<
+    (typeof BANNERS)[number]["value"]
+  >("/events/banner-default.svg");
   const [description, setDescription] = useState("");
+  const [maxTickets, setMaxTickets] = useState("100");
+  const [tokenUri, setTokenUri] = useState("");
 
   const canSubmit = useMemo(() => {
     return (
       title.trim().length >= 3 &&
       dateISO.trim().length > 0 &&
       venue.trim().length >= 2 &&
-      city.trim().length >= 2
+      city.trim().length >= 2 &&
+      Number(maxTickets) > 0
     );
-  }, [title, dateISO, venue, city]);
+  }, [title, dateISO, venue, city, maxTickets]);
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!canSubmit) return;
-
-    const event: TixelEvent = {
-      id: `evt_${Date.now()}`,
-      title: title.trim(),
-      dateISO,
-      time: time.trim() ? time.trim() : undefined,
-      bannerImage,
-      venue: venue.trim(),
-      city: city.trim(),
-      priceCents: toCents(price),
-      currency: "USD",
-      tags: tags
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean)
-        .slice(0, 8),
-      description: description.trim() || "No description yet.",
-    };
-
-    addLocalEvent(event);
-    router.push("/events");
-  }
+  const createEvent = async () => {
+    if (!canSubmit) {
+      console.error("Form validation failed");
+      return;
+    }
+  
+    try {
+      const dateTimestamp = Math.floor(new Date(dateISO).getTime() / 1000);
+      const priceUsdcx = toCents(price) * 10000;
+      const finalTokenUri = tokenUri.trim() || `ipfs://event-${Date.now()}`;
+  
+      const functionArgs = [
+        stringUtf8CV(title.trim().substring(0, 64)),
+        stringUtf8CV(venue.trim().substring(0, 64)),
+        stringUtf8CV(city.trim().substring(0, 64)),
+        uintCV(dateTimestamp),
+        uintCV(Number(maxTickets)),
+        uintCV(priceUsdcx),
+        stringAsciiCV(finalTokenUri.substring(0, 256))
+      ];
+  
+      const result = (await request("stx_callContract", {
+        contract: STACKS_EVENT_TICKETING_CONTRACT as `${string}.${string}`,
+        functionName: "create-event",
+        functionArgs,
+      })) as unknown as { txid?: string };
+  
+      console.log("Event created successfully!", result);
+      
+      if (result.txid) {
+        setNotice(`Event created successfully! TxID: ${result.txid}`);
+        // Redirect after a short delay so the user can see the txid
+        setTimeout(() => router.push("/events"), 2000);
+      }
+    } catch (error) {
+      console.error("Error creating event:", error);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-black text-zinc-100">
@@ -79,12 +98,14 @@ export default function CreateEventPage() {
       <main>
         <Container className="py-10">
           <div className="max-w-2xl">
-            <h1 className="text-2xl font-semibold tracking-tight">Create event</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">
+              Create event
+            </h1>
             <p className="mt-2 text-sm text-zinc-400">
-              This is a lightweight demo. Events save locally in your browser.
+              Your event will be published directly to the Stacks blockchain.
             </p>
 
-            <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+            <form className="mt-8 space-y-5">
               <div>
                 <label className="block text-xs text-zinc-400">Title</label>
                 <input
@@ -106,7 +127,9 @@ export default function CreateEventPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-zinc-400">Time (optional)</label>
+                  <label className="block text-xs text-zinc-400">
+                    Time (optional)
+                  </label>
                   <input
                     value={time}
                     onChange={(e) => setTime(e.target.value)}
@@ -139,7 +162,9 @@ export default function CreateEventPage() {
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <label className="block text-xs text-zinc-400">Ticket price (USD)</label>
+                  <label className="block text-xs text-zinc-400">
+                    Ticket price (USD)
+                  </label>
                   <input
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
@@ -149,7 +174,9 @@ export default function CreateEventPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-zinc-400">Tags (comma-separated)</label>
+                  <label className="block text-xs text-zinc-400">
+                    Tags (comma-separated)
+                  </label>
                   <input
                     value={tags}
                     onChange={(e) => setTags(e.target.value)}
@@ -159,12 +186,43 @@ export default function CreateEventPage() {
                 </div>
               </div>
 
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="block text-xs text-zinc-400">
+                    Max tickets available
+                  </label>
+                  <input
+                    value={maxTickets}
+                    onChange={(e) => setMaxTickets(e.target.value)}
+                    type="number"
+                    min="1"
+                    placeholder="100"
+                    className="mt-2 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-orange-400 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-zinc-400">
+                    Token URI (optional)
+                  </label>
+                  <input
+                    value={tokenUri}
+                    onChange={(e) => setTokenUri(e.target.value)}
+                    placeholder="ipfs://..."
+                    className="mt-2 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-orange-400 focus:outline-none"
+                  />
+                </div>
+              </div>
+
               <div>
-                <label className="block text-xs text-zinc-400">Banner image</label>
+                <label className="block text-xs text-zinc-400">
+                  Banner image
+                </label>
                 <select
                   value={bannerImage}
                   onChange={(e) =>
-                    setBannerImage(e.target.value as (typeof BANNERS)[number]["value"])
+                    setBannerImage(
+                      e.target.value as (typeof BANNERS)[number]["value"],
+                    )
                   }
                   className="mt-2 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 focus:border-orange-400 focus:outline-none"
                 >
@@ -180,7 +238,9 @@ export default function CreateEventPage() {
               </div>
 
               <div>
-                <label className="block text-xs text-zinc-400">Description</label>
+                <label className="block text-xs text-zinc-400">
+                  Description
+                </label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -192,8 +252,9 @@ export default function CreateEventPage() {
 
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                 <button
-                  type="submit"
-                  disabled={!canSubmit}
+                  onClick={createEvent}
+                  // type="submit"
+                  // disabled={!canSubmit}
                   className="inline-flex items-center justify-center rounded-md bg-orange-400 px-4 py-2 text-sm font-semibold text-black hover:bg-orange-300 disabled:opacity-50"
                 >
                   Publish event
@@ -202,6 +263,11 @@ export default function CreateEventPage() {
                   Required: title, date, venue, city.
                 </p>
               </div>
+              {notice && (
+                <div className="mt-4 rounded-md bg-zinc-900 p-3 text-xs text-orange-400">
+                  {notice}
+                </div>
+              )}
             </form>
           </div>
         </Container>
@@ -209,4 +275,3 @@ export default function CreateEventPage() {
     </div>
   );
 }
-

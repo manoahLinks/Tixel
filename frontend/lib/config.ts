@@ -13,4 +13,4 @@ export const STACKS_USDCX_CONTRACT =
 // Where you deploy `contracts/contracts/event-ticketing.clar` (contract name: `event-ticketings`)
 export const STACKS_EVENT_TICKETING_CONTRACT =
   (process.env.NEXT_PUBLIC_STACKS_EVENT_TICKETING_CONTRACT ??
-    "ST1VYVQJNH6XSH9GGCPBK5E5QCVB0JFFWG8ESPPSK.tixel-event-ticketing") as `${string}.${string}`;
+    "ST1VYVQJNH6XSH9GGCPBK5E5QCVB0JFFWG8ESPPSK.tixel-events") as `${string}.${string}`;

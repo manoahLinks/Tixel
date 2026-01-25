@@ -8,7 +8,7 @@ cache_dir = "./.cache"
 
 [[project.requirements]]
 contract_id = 'SP2PABAF9FTAJYNFZH93XENAJ8FVY99RRM50D2JG9.nft-trait'
-[contracts.ticketss-nft]
+[contracts.event-nft]
 path = 'contracts/tickets.clar'
 clarity_version = 3
 epoch = 'latest'
@@ -17,7 +17,7 @@ epoch = 'latest'
 # path = "contracts/counter.clar"
 # epoch = "latest"
 
-[contracts.tixel-event-ticketing]
+[contracts.tixel-events]
 path = "contracts/event-ticketing.clar"
 clarity_version = 3
 epoch = "latest"

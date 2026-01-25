@@ -1,3 +1,9 @@
+import { STACKS_EVENT_TICKETING_CONTRACT } from "./config";
+import { fetchCallReadOnlyFunction, cvToJSON, uintCV } from "@stacks/transactions";
+import { STACKS_TESTNET } from "@stacks/network";
+
+const NETWORK = STACKS_TESTNET;
+
 export type TixelEvent = {
   id: string;
   title: string;
@@ -132,3 +138,94 @@ export function formatEventDate(dateISO: string) {
   }).format(d);
 }
 
+export async function fetchOnChainEvent(eventId: number): Promise<TixelEvent | null> {
+  try {
+    const [contractAddress, contractName] = STACKS_EVENT_TICKETING_CONTRACT.split(".");
+    
+    const response = await fetchCallReadOnlyFunction({
+      contractAddress,
+      contractName,
+      functionName: "get-event",
+      functionArgs: [uintCV(eventId)],
+      senderAddress: contractAddress,
+      network: NETWORK,
+    });
+
+    const json = cvToJSON(response);
+    
+    if (!json || !json.value) {
+      return null;
+    }
+
+    // json is OptionalCV, json.value is TupleCV, json.value.value is the object with keys
+    const data = json.value.value;
+    
+    // Map Clarity data to TixelEvent
+    // Clarity types: name (utf8), venue (utf8), city (utf8), date (uint), max-tickets (uint), price-usdcx (uint), organizer (principal), tickets-sold (uint), is-cancelled (bool), token-uri (ascii)
+    
+    const name = data.name?.value || "Untitled Event";
+    const venue = data.venue?.value || "Unknown Venue";
+    const city = data.city?.value || "Unknown City";
+    const dateTimestamp = Number(data.date?.value || 0);
+    const dateISO = new Date(dateTimestamp * 1000).toISOString().split("T")[0];
+    const priceUsdcx = Number(data["price-usdcx"]?.value || 0);
+    const priceCents = Math.floor(priceUsdcx / 10000); // 10^4 because 10^6 decimals to 10^2 cents
+    const tokenUri = data["token-uri"]?.value || "";
+    
+    return {
+      id: `chain_${eventId}`,
+      title: name,
+      dateISO,
+      bannerImage: "/events/banner-default.svg", // Default for on-chain events
+      stacksEventId: eventId,
+      tokenUri,
+      venue,
+      city,
+      priceCents,
+      currency: "USD",
+      description: `This event was fetched from the Stacks blockchain. Organizer: ${data.organizer?.value}`,
+      tags: ["blockchain", "on-chain"],
+    };
+  } catch (error) {
+    console.error("Error fetching on-chain event:", error);
+    return null;
+  }
+}
+
+export async function fetchAllOnChainEvents(): Promise<TixelEvent[]> {
+  try {
+    const [contractAddress, contractName] = STACKS_EVENT_TICKETING_CONTRACT.split(".");
+    
+    // 1. Get total events count
+    const response = await fetchCallReadOnlyFunction({
+      contractAddress,
+      contractName,
+      functionName: "get-next-event-id",
+      functionArgs: [],
+      senderAddress: contractAddress,
+      network: NETWORK,
+    });
+
+    const json = cvToJSON(response);
+    const nextId = Number(json.value?.value || 1);
+    
+    const events: TixelEvent[] = [];
+    
+    // 2. Fetch each event (Clarity doesn't support list-map yet)
+    // We start from 1 up to nextId - 1
+    const fetchPromises = [];
+    for (let i = 1; i < nextId; i++) {
+      fetchPromises.push(fetchOnChainEvent(i));
+    }
+    
+    const results = await Promise.all(fetchPromises);
+    for (const res of results) {
+      if (res) events.push(res);
+    }
+    
+    return events;
+  } catch (error) {
+    console.error("Error fetching all on-chain events:", error);
+    return [];
+  }
+}

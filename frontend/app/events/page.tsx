@@ -5,29 +5,21 @@ import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import Container from "@/components/Container";
 import SiteHeader from "@/components/SiteHeader";
-import { formatEventDate, formatMoney, SEED_EVENTS, type TixelEvent } from "@/lib/events";
-import { loadLocalEvents } from "@/lib/eventStore";
-
-function mergeEvents(seed: TixelEvent[], local: TixelEvent[]) {
-  const map = new Map<string, TixelEvent>();
-  for (const e of local) map.set(e.id, e);
-  for (const e of seed) if (!map.has(e.id)) map.set(e.id, e);
-  return Array.from(map.values());
-}
+import { fetchAllOnChainEvents, formatEventDate, formatMoney, type TixelEvent } from "@/lib/events";
 
 export default function EventsIndexPage() {
   const [query, setQuery] = useState("");
   const [tag, setTag] = useState<string>("all");
-  const [localEvents, setLocalEvents] = useState<TixelEvent[]>([]);
+  const [allEvents, setAllEvents] = useState<TixelEvent[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    setLocalEvents(loadLocalEvents());
+    fetchAllOnChainEvents()
+      .then((evts) => {
+        setAllEvents(evts.sort((a, b) => a.dateISO.localeCompare(b.dateISO)));
+      })
+      .finally(() => setIsLoading(false));
   }, []);
-
-  const allEvents = useMemo(() => {
-    const merged = mergeEvents(SEED_EVENTS, localEvents);
-    return merged.sort((a, b) => a.dateISO.localeCompare(b.dateISO));
-  }, [localEvents]);
 
   const tags = useMemo(() => {
     const set = new Set<string>();
@@ -96,10 +88,15 @@ export default function EventsIndexPage() {
           </div>
 
           <div className="mt-10 grid gap-4 md:grid-cols-2">
-            {filtered.map((e) => (
+            {isLoading ? (
+              <div className="md:col-span-2 flex items-center justify-center rounded-lg border border-zinc-800 p-12">
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-orange-400 border-t-transparent" />
+                <span className="ml-3 text-sm text-zinc-400">Loading events from blockchain...</span>
+              </div>
+            ) : filtered.map((e) => (
               <Link
                 key={e.id}
-                href={`/events/${encodeURIComponent(e.id)}`}
+                href={`/events/${encodeURIComponent(e.stacksEventId || e.id)}`}
                 className="overflow-hidden rounded-lg border border-zinc-800 hover:border-orange-400"
               >
                 <div className="relative h-36 w-full bg-zinc-950">

@@ -5,37 +5,40 @@ import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { request, isConnected as stacksIsConnected } from "@stacks/connect";
-import { contractPrincipalCV, cvToHex, uintCV } from "@stacks/transactions";
+import { contractPrincipalCV, uintCV } from "@stacks/transactions";
 import Container from "@/components/Container";
 import SiteHeader from "@/components/SiteHeader";
 import BridgeForm from "@/components/BridgeForm";
 import EvmWalletControls from "@/components/EvmWalletControls";
 import StacksWalletControls from "@/components/StacksWalletControls";
-import { formatEventDate, formatMoney, SEED_EVENTS, type TixelEvent } from "@/lib/events";
-import { loadLocalEvents } from "@/lib/eventStore";
+import { fetchOnChainEvent, formatEventDate, formatMoney, type TixelEvent } from "@/lib/events";
 import { STACKS_EVENT_TICKETING_CONTRACT, STACKS_USDCX_CONTRACT } from "@/lib/config";
 
-function findEvent(id: string, local: TixelEvent[]) {
-  const fromLocal = local.find((e) => e.id === id);
-  if (fromLocal) return fromLocal;
-  return SEED_EVENTS.find((e) => e.id === id) ?? null;
-}
 
 export default function EventDetailsPage() {
   const params = useParams<{ id: string }>();
   const id = typeof params?.id === "string" ? params.id : "";
 
-  const [localEvents, setLocalEvents] = useState<TixelEvent[]>([]);
+  const [onChainEvent, setOnChainEvent] = useState<TixelEvent | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [qty, setQty] = useState(1);
   const [notice, setNotice] = useState<string>("");
   const [showBridge, setShowBridge] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
 
   useEffect(() => {
-    setLocalEvents(loadLocalEvents());
-  }, []);
+    if (/^\d+$/.test(id)) {
+      fetchOnChainEvent(parseInt(id))
+        .then((evt) => {
+          if (evt) setOnChainEvent(evt);
+        })
+        .finally(() => setIsLoading(false));
+    } else {
+      setIsLoading(false);
+    }
+  }, [id]);
 
-  const event = useMemo(() => findEvent(id, localEvents), [id, localEvents]);
+  const event = onChainEvent;
 
   const total = useMemo(() => {
     if (!event) return 0;
@@ -64,9 +67,9 @@ export default function EventDetailsPage() {
     setIsPurchasing(true);
     try {
       const functionArgs = [
-        cvToHex(uintCV(event.stacksEventId)),
-        cvToHex(uintCV(safeQty)),
-        cvToHex(contractPrincipalCV(usdcxAddr, usdcxName)),
+        uintCV(event.stacksEventId),
+        uintCV(safeQty),
+        contractPrincipalCV(usdcxAddr, usdcxName),
       ];
 
       const result = (await request("stx_callContract", {
@@ -96,7 +99,12 @@ export default function EventDetailsPage() {
             </Link>
           </div>
 
-          {!event ? (
+          {isLoading ? (
+            <div className="flex items-center justify-center rounded-lg border border-zinc-800 p-12">
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-orange-400 border-t-transparent" />
+              <span className="ml-3 text-sm text-zinc-400">Loading event...</span>
+            </div>
+          ) : !event ? (
             <div className="rounded-lg border border-zinc-800 p-6">
               <h1 className="text-lg font-semibold">Event not found</h1>
               <p className="mt-2 text-sm text-zinc-400">
